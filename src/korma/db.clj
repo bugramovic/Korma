@@ -114,7 +114,7 @@
       (catch Exception e
         (println "Failure to execute query with SQL:")
         (println sql " :: " params)
-        (if (instance? java.sql.SqlException e)
+        (if (instance? java.sql.SQLException e)
           (jdbc/print-sql-exception e)
           (println e) )
         ))))
