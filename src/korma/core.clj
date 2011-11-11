@@ -7,6 +7,20 @@
 (def ^{:dynamic true} *exec-mode* false)
 
 ;;*****************************************************
+;; multimethods to transform parameters on update or select
+;; default to do nothing
+;;*****************************************************
+
+(defmulti convert-before-update class
+  :default :no-op)
+(defmethod convert-before-update :no-op [x] x)
+
+(defmulti convert-after-select class
+  :default :no-op)
+
+(defmethod convert-after-select :no-op [x] x)
+
+;;*****************************************************
 ;; Query types
 ;;*****************************************************
 
@@ -262,12 +276,36 @@
       (post-fn results))
     results))
 
+;TODO: rename ?
+(defn- apply-convert-after-select
+  "Applies the convert-after-select multimethod to all values in the result"
+  [results]
+    (let [apply-on-map (fn [m] (into {} (for [[k v] m] [k (convert-before-update v)])) ) ]
+      (cond (nil? results) nil
+            (map? results) (apply-on-map results)
+            :else (map apply-on-map results) ) ) )
+
 (defn- apply-transforms
   [query results]
   (if-let [trans (seq (-> query :ent :transforms))]
     (let [trans-fn (apply comp trans)]
       (map trans-fn results))
     results))
+
+;TODO: rename ?
+;based on apply-prepares
+(defn- apply-convert-before-update
+  "applies the convert-before-update multimethod to all parameters"
+  [query]
+;   query )
+   (let [apply-on-map (fn [m] (into {} (for [[k v] m] [k (convert-before-update v)])) ) ]
+    (condp = (:type query)
+      :insert (let [values (:values query)
+                    applied (map apply-on-map values)]
+                (assoc query :values applied))
+      :update (let [value (:set-fields query)]
+                (assoc query :set-fields (apply-on-map value)))
+      query)))
 
 (defn- apply-prepares
   [query]
@@ -284,7 +322,7 @@
 (defn exec
   "Execute a query map and return the results."
   [query]
-  (let [query (apply-prepares query)
+  (let [query (apply-convert-before-update (apply-prepares query))
         query (bind-query query (isql/->sql query))
         sql (:sql-str query)
         params (:params query)]
@@ -295,7 +333,7 @@
                                  (println "dry run ::" sql "::" (vec params))
                                  (apply-posts query [{:id 1}]))
       :else (let [results (db/do-query query)]
-              (apply-transforms query (apply-posts query results))))))
+              (apply-transforms query (apply-convert-after-select (apply-posts query results)))))))
 
 (defn exec-raw
   "Execute a raw SQL string, supplying whether results should be returned. `sql` can either be
