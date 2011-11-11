@@ -8,4 +8,7 @@
                                                         com.sun.jmx/jmxri]]
                            [org.clojure/java.jdbc "0.1.0"]]
             :autodoc {:name "Korma" :page-title "Korma Docs"}
-            :dev-dependencies [[org.clojars.rayne/autodoc "0.8.0-SNAPSHOT"]])
+            :dev-dependencies [[org.clojars.rayne/autodoc "0.8.0-SNAPSHOT"]
+
+                               [com.h2database/h2 "1.3.161"]
+                               [postgresql/postgresql "9.0-801.jdbc4"]])
