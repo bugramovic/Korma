@@ -6,9 +6,10 @@
                                                         javax.jms/jms
                                                         com.sun.jdmk/jmxtools
                                                         com.sun.jmx/jmxri]]
-                           [org.clojure/java.jdbc "0.1.0"]]
+                           [org.clojure/java.jdbc "0.1.0"]
+			   [com.vividsolutions/jts "1.12"]]
             :autodoc {:name "Korma" :page-title "Korma Docs"}
             :dev-dependencies [[org.clojars.rayne/autodoc "0.8.0-SNAPSHOT"]
-
+                               [enlive "1.0.0"]
                                [com.h2database/h2 "1.3.161"]
                                [postgresql/postgresql "9.0-801.jdbc4"]])
