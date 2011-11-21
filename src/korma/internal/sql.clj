@@ -205,12 +205,15 @@
                (str (table-str table) (alias-clause alias)))
     :else (table-str v)))
 
+;ab TODO: handle join-type DUMMY ? -> add conditional and simply output the table-name
+; + write a korma.postgis-macro to output the join-stuff
 (defn join-clause [join-type table pk fk]
   (let [join-type (string/upper-case (name join-type))
         table (from-table table)
         join (str " " join-type " JOIN " table " ON ")
         on-clause (str (field-str pk) " = " (field-str fk))]
-    (str join on-clause)))
+    (if (= "TABLE" join-type) (str ", " table) (str join on-clause))))
+
 
 (defn insert-values-clause [ks vs]
   (for [v vs]
@@ -259,7 +262,7 @@
 
 (defn sql-joins [query]
   (let [clauses (for [[type table pk fk] (:joins query)]
-                  (join-clause :left table pk fk))
+                  (join-clause type table pk fk))
         clauses-str (string/join "" clauses)]
     (update-in query [:sql-str] str clauses-str)))
 
